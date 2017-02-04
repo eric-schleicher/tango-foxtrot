@@ -1,0 +1,47 @@
+apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion 25
+    buildToolsVersion "25.0.2"
+    defaultConfig {
+        applicationId "com.mjordan.explore.tango"
+        minSdkVersion 19
+        targetSdkVersion 25
+        versionCode 1
+        versionName "1.0"
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+dependencies {
+    /*
+        include all the jar files in the "libs" directory.
+        Tango core lib included here
+    */
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+
+    /*
+        unit testing
+    */
+    androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
+        exclude group: 'com.android.support', module: 'support-annotations'
+    })
+    testCompile 'junit:junit:4.12'
+
+    /*
+        Android support lib for backwards compatibility
+    */
+    compile 'com.android.support:appcompat-v7:25.1.0'
+
+
+    /*
+        Tango support AAR - copied from google tango examples
+     */
+    compile project(':tango_support_java_lib')
+}
