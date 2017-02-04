@@ -4,16 +4,15 @@ import com.google.atap.tangoservice.Tango;
 import com.google.atap.tangoservice.TangoConfig;
 import com.google.atap.tangoservice.TangoCoordinateFramePair;
 import com.google.atap.tangoservice.TangoErrorException;
-import com.google.atap.tangoservice.TangoEvent;
 import com.google.atap.tangoservice.TangoInvalidException;
 import com.google.atap.tangoservice.TangoOutOfDateException;
-import com.google.atap.tangoservice.TangoPointCloudData;
 import com.google.atap.tangoservice.TangoPoseData;
-import com.google.atap.tangoservice.TangoXyzIjData;
 
+import com.mjordan.explore.tango.updateListeners.PointCloudStrategy;
 import com.projecttango.tangosupport.TangoSupport;
 
 import android.content.Context;
+import android.databinding.ObservableField;
 import android.util.Log;
 
 import java.util.ArrayList;
@@ -27,29 +26,51 @@ public class TangoViewModel {
     public static final String TAG = TangoViewModel.class.toString();
 
     private Tango mTango;
-    private boolean mIsConnected;
+
+    private final ObservableField<String> mPointCount = new ObservableField<>();
+    private final ObservableField<String> mAverageDepth = new ObservableField<>();
+
+    public ObservableField<String> getPointCount() {
+        return mPointCount;
+    }
+
+    public ObservableField<String> getAverageDepth() {
+        return mAverageDepth;
+    }
 
     public void startObservingTango(Context context) {
         mTango = new Tango(context, new Runnable() {
-            private TangoConfig mConfig;
 
             @Override
             public void run() {
                 try {
                     TangoSupport.initialize();
-                    mConfig = setupTangoConfig(mTango);
-                    mTango.connect(mConfig);
+                    mTango.connect(setupTangoConfig(mTango));
                     startupTango();
-                    mIsConnected = true;
-                } catch (TangoOutOfDateException e) {
+                }
+                catch (TangoOutOfDateException e) {
                     Log.e(TAG, "Tango Service outdated!", e);
-                } catch (TangoErrorException e) {
+                }
+                catch (TangoErrorException e) {
                     Log.e(TAG, "Tango Exception, try again!", e);
-                } catch (TangoInvalidException e) {
+                }
+                catch (TangoInvalidException e) {
                     Log.e(TAG, "Tango Invalid Exception, try again!", e);
                 }
             }
         });
+    }
+
+    public void stopObservingTango() {
+        // all these synchronized calls were in the tango example, but may not be needed when not using openGl
+        synchronized (this) {
+            try {
+                mTango.disconnect();
+            }
+            catch (TangoErrorException e) {
+                Log.e(TAG, "Tango Exception, try again!", e);
+            }
+        }
     }
 
     /**
@@ -58,58 +79,15 @@ public class TangoViewModel {
      * Listen to updates from the Point Cloud and Tango Events and Pose.
      */
     private void startupTango() {
-        ArrayList<TangoCoordinateFramePair> framePairs = new ArrayList<TangoCoordinateFramePair>();
+        ArrayList<TangoCoordinateFramePair> framePairs = new ArrayList<>();
 
         framePairs.add(new TangoCoordinateFramePair(TangoPoseData.COORDINATE_FRAME_START_OF_SERVICE,
                                                     TangoPoseData.COORDINATE_FRAME_DEVICE));
 
-        mTango.connectListener(framePairs, new Tango.OnTangoUpdateListener() {
-            @Override
-            public void onPoseAvailable(TangoPoseData pose) {
-                // Passing in the pose data to UX library produce exceptions.
-            }
-
-            @Override
-            public void onXyzIjAvailable(TangoXyzIjData xyzIj) {
-                // We are not using onXyzIjAvailable for this app.
-            }
-
-            @Override
-            public void onPointCloudAvailable(TangoPointCloudData pointCloud) {
-//                mPointCloudManager.updatePointCloud(pointCloud);
-//
-//                final double currentTimeStamp = pointCloud.timestamp;
-//                final double pointCloudFrameDelta =
-//                    (currentTimeStamp - mPointCloudPreviousTimeStamp) * SECS_TO_MILLISECS;
-//                mPointCloudPreviousTimeStamp = currentTimeStamp;
-//                final double averageDepth = getAveragedDepth(pointCloud.points,
-//                                                             pointCloud.numPoints);
-//
-//                mPointCloudTimeToNextUpdate -= pointCloudFrameDelta;
-//
-//                if (mPointCloudTimeToNextUpdate < 0.0) {
-//                    mPointCloudTimeToNextUpdate = UPDATE_INTERVAL_MS;
-//                    final String pointCountString = Integer.toString(pointCloud.numPoints);
-//
-//                    runOnUiThread(new Runnable() {
-//                        @Override
-//                        public void run() {
-//                            mPointCountTextView.setText(pointCountString);
-//                            mAverageZTextView.setText(FORMAT_THREE_DECIMAL.format(averageDepth));
-//                        }
-//                    });
-//                }
-            }
-
-            @Override
-            public void onTangoEvent(TangoEvent event) {
-            }
-
-            @Override
-            public void onFrameAvailable(int cameraId) {
-                // We are not using onFrameAvailable for this application.
-            }
-        });
+        mTango.connectListener(framePairs,
+                               new PointCloudStrategy(this,
+                                                      mPointCount,
+                                                      mAverageDepth));
     }
 
     /**
@@ -123,4 +101,5 @@ public class TangoViewModel {
         config.putInt(TangoConfig.KEY_INT_DEPTH_MODE, TangoConfig.TANGO_DEPTH_MODE_POINT_CLOUD);
         return config;
     }
+
 }
