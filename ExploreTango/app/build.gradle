@@ -1,4 +1,6 @@
 apply plugin: 'com.android.application'
+// for annotation processors with AutoValue
+apply plugin: 'com.neenbedankt.android-apt'
 
 android {
     compileSdkVersion 25
@@ -11,10 +13,13 @@ android {
     defaultConfig {
         applicationId "com.mjordan.explore.tango"
         minSdkVersion 19
-        targetSdkVersion 25
+        // don't want to deal with the new permission model...so 22 it is
+        targetSdkVersion 22
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+
+        buildConfigField("boolean", "MOCK", "true")
     }
     buildTypes {
         release {
@@ -26,12 +31,6 @@ android {
 
 dependencies {
     /*
-        include all the jar files in the "libs" directory.
-        Tango core lib included here
-    */
-    compile fileTree(dir: 'libs', include: ['*.jar'])
-
-    /*
         unit testing
     */
     androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
@@ -40,13 +39,36 @@ dependencies {
     testCompile 'junit:junit:4.12'
 
     /*
+        include all the jar files in the "libs" directory.
+        Tango core lib included here
+    */
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+
+    /*
         Android support lib for backwards compatibility
     */
     compile 'com.android.support:appcompat-v7:25.1.0'
-
 
     /*
         Tango support AAR - copied from google tango examples
      */
     compile project(':tango_support_java_lib')
+
+    /*
+        Rx Java with Android helpers - easily make producer/consumer chains
+        and control threading
+     */
+    compile 'io.reactivex:rxandroid:1.2.1'
+    compile 'io.reactivex:rxjava:1.2.6'
+
+    /*
+        Gson - JSON serializer
+     */
+    compile 'com.google.code.gson:gson:2.4'
+
+    /*
+        Google Auto Value - utility code generator tool
+     */
+    provided 'com.google.auto.value:auto-value:1.2'
+    apt 'com.google.auto.value:auto-value:1.2'
 }
