@@ -19,7 +19,7 @@ android {
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 
-        buildConfigField("boolean", "MOCK", "true")
+        buildConfigField("boolean", "MOCK", "false")
     }
     buildTypes {
         release {

@@ -1,6 +1,9 @@
 package com.mjordan.explore.tango;
 
 import com.mjordan.explore.tango.databinding.AMainBinding;
+import com.mjordan.explore.tango.viewModels.ITangoViewModel;
+import com.mjordan.explore.tango.viewModels.MockTangoViewModel;
+import com.mjordan.explore.tango.viewModels.TangoViewModel;
 
 import android.databinding.DataBindingUtil;
 import android.os.Environment;
