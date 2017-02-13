@@ -25,18 +25,25 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         AMainBinding binding =  DataBindingUtil.setContentView(this, R.layout.a_main);
 
-        File sessionTangoFile = new File(mOutputFileDir, "tango_data.json");
-        if (!sessionTangoFile.mkdirs()) {
+        File sessionPointCloudFile = new File(mOutputFileDir, "tango_point_cloud_data.json");
+        if (!sessionPointCloudFile.mkdirs()) {
             Log.e(TAG, "directory not created");
         }
+
         // only keeping track of the most recent session
-        if (sessionTangoFile.exists()) {
-            sessionTangoFile.delete();
+        if (sessionPointCloudFile.exists()) {
+            sessionPointCloudFile.delete();
         }
 
-        mTangoViewModel = createViewModel(sessionTangoFile);
+        File sessionPoseFile = new File(mOutputFileDir, "tango_pose_data.json");
+        if (sessionPoseFile.exists()) {
+            sessionPoseFile.delete();
+        }
+
+        mTangoViewModel = createViewModel(sessionPointCloudFile,
+                                          sessionPoseFile);
         binding.setModel(mTangoViewModel);
-        binding.setOutputFile(sessionTangoFile.getAbsolutePath());
+        binding.setOutputFile(sessionPointCloudFile.getAbsolutePath());
     }
 
     @Override
@@ -51,10 +58,11 @@ public class MainActivity extends AppCompatActivity {
         mTangoViewModel.stopObservingTango();
     }
 
-    private ITangoViewModel createViewModel(File outputFile) {
+    private ITangoViewModel createViewModel(File pointCloudFile, File poseFile) {
         if (BuildConfig.MOCK) {
-            return new MockTangoViewModel(outputFile);
+            return new MockTangoViewModel(pointCloudFile);
         }
-        return new TangoViewModel(outputFile);
+        return new TangoViewModel(pointCloudFile,
+                                  poseFile);
     }
 }

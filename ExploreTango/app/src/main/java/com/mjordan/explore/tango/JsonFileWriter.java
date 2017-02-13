@@ -27,7 +27,7 @@ public class JsonFileWriter {
         mOutputFile = outputFile;
     }
 
-    public void writeToFile(List<PointCloudData> pointCloudDatas) {
+    public void writeToFile(List<?> pointCloudDatas) {
         try {
             Writer writer = new FileWriter(mOutputFile);
             Gson gson = new GsonBuilder().create();
